@@ -56,7 +56,7 @@ def test_distribution_tree_has_no_machine_local_or_secret_residue():
     import re
 
     root = Path(__file__).resolve().parents[1]
-    scan_roots = [root / "h3_scribe", root / "web", root / "prompts", root / "workflows"]
+    scan_roots = [root / "h3_scribe", root / "web", root / "prompts", root / "example_workflows"]
     files = [root / "README.md", root / "pyproject.toml", root / "requirements.txt", root / "__init__.py"]
     for scan_root in scan_roots:
         files.extend(
