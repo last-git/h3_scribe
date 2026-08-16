@@ -1,0 +1,7 @@
+# Development / CI
+tests/
+.github/
+docs/
+
+# Development artifacts
+*.patch
