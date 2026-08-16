@@ -2,12 +2,14 @@
 name = "h3-scribe"
 version = "0.6.4"
 description = "MiniMax H3 prompt authoring for ComfyUI"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = ["pydantic>=2.7"]
 
-# Choose the project license and fill Registry publisher metadata before publication.
-# Fill PublisherId / DisplayName / Icon after reserving the real Comfy Registry publisher.
-# [tool.comfy]
-# PublisherId = "..."
-# DisplayName = "H3 Scribe"
-# Icon = ""
+[project.urls]
+Repository = "https://github.com/last-git/h3_scribe"
+"Bug Tracker" = "https://github.com/last-git/h3_scribe/issues"
+
+[tool.comfy]
+PublisherId = "last"
+DisplayName = "H3 Scribe"

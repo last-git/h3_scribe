@@ -5,6 +5,14 @@ MiniMax H3用の、ComfyUI内で完結するプロンプト作成支援ノード
 
 **画像解析結果とAuthoringは日本語で出力・編集します。最終H3 Promptは英語で生成されます。**
 
+## インストール
+
+ComfyUI Managerで `H3 Scribe` を検索してインストールしてください。
+
+依存:
+- ComfyUI_Simple_Qwen3-VL-gguf
+- 各workflowで使用するモデル
+
 ## できること
 
 - **I2VA**: Initial画像を開始フレームとして動画プロンプトを作成
@@ -60,6 +68,14 @@ Castを増やす場合はCast `Load Image`を複製し、`Cast images 1-N` の�
 H3 Scribe is a ComfyUI-native authoring layer for MiniMax H3. It analyzes reference images with Qwen, lets you edit the semantic Authoring state, and composes a final MiniMax H3 prompt.
 
 **Image-analysis drafts and Authoring are produced/editable in Japanese. The final H3 prompt is generated in English.**
+
+## Installation
+
+Search for `H3 Scribe` in ComfyUI Manager and install it.
+
+Requirements:
+- `ComfyUI_Simple_Qwen3-VL-gguf`
+- The models required by each workflow
 
 ## What it can do
 
