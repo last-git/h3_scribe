@@ -7,6 +7,11 @@ license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["pydantic>=2.7"]
 
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
 [project.urls]
 Repository = "https://github.com/last-git/h3_scribe"
 "Bug Tracker" = "https://github.com/last-git/h3_scribe/issues"

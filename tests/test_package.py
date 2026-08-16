@@ -79,6 +79,12 @@ def test_distribution_tree_has_no_machine_local_or_secret_residue():
     assert re.search(home_pattern, text) is None
     assert re.search(r"(?i)bearer\s+[A-Za-z0-9._~+/=-]{16,}", text) is None
 
-    assert not (root / "quality").exists()
+    comfyignore = (root / ".comfyignore").read_text(encoding="utf-8")
+    ignored = {
+        line.strip().replace("\\", "/").rstrip("/")
+        for line in comfyignore.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    assert "quality" in ignored
     assert "H3Scribe_" + "AnalyzeOutput" not in text
     assert "H3Scribe_" + "ComposeOutput" not in text

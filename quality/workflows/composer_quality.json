@@ -1,0 +1,825 @@
+{
+  "id": "fa73e346-6d72-4a1d-9d0c-7f775a0fe8d3",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 9,
+      "type": "MarkdownNote",
+      "pos": [
+        -760,
+        -120
+      ],
+      "size": [
+        620,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# H3 Scribe — Composer Quality Workflow\n\nDevelopment-only workflow for Q4/Q3 semantic comparison.\n\nFlow:\n`Authoring → Compose → Simple Qwen → Raw Qwen → Validate & Render → Final H3 Prompt`\n\n`quality/run.py` loads this exact workflow. It executes to **Raw Qwen** first so malformed JSON is preserved, then validates/renders that captured text without running Qwen again.\n\nYou can also open this JSON in ComfyUI and inspect/run it manually.\n\nThe runner replaces Model / mmproj / Authoring per test case."
+      ],
+      "title": "Composer quality — read me"
+    },
+    {
+      "id": 1,
+      "type": "H3Scribe_QwenModelSelector",
+      "pos": [
+        -80,
+        40
+      ],
+      "size": [
+        390,
+        120
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model"
+          }
+        },
+        {
+          "name": "mmproj",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "mmproj"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "config_override",
+          "type": "STRING",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_QwenModelSelector"
+      },
+      "widgets_values": [
+        "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf",
+        "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
+      ],
+      "title": "Qwen model / mmproj"
+    },
+    {
+      "id": 2,
+      "type": "Qwen3VL_ModelConfig",
+      "pos": [
+        380,
+        20
+      ],
+      "size": [
+        390,
+        520
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "config_override",
+          "type": "STRING",
+          "link": 1,
+          "shape": 7
+        },
+        {
+          "name": "model_path",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "model_path"
+          }
+        },
+        {
+          "name": "mmproj_path",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "mmproj_path"
+          }
+        },
+        {
+          "name": "n_ctx",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_ctx"
+          }
+        },
+        {
+          "name": "n_batch",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_batch"
+          }
+        },
+        {
+          "name": "n_ubatch",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_ubatch"
+          }
+        },
+        {
+          "name": "n_gpu_layers",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_gpu_layers"
+          }
+        },
+        {
+          "name": "n_cpu_moe",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_cpu_moe"
+          }
+        },
+        {
+          "name": "n_threads",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_threads"
+          }
+        },
+        {
+          "name": "use_mmap",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "use_mmap"
+          }
+        },
+        {
+          "name": "use_mlock",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "use_mlock"
+          }
+        },
+        {
+          "name": "offload_kqv",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "offload_kqv"
+          }
+        },
+        {
+          "name": "chat_handler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "chat_handler"
+          }
+        },
+        {
+          "name": "chat_format",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "chat_format"
+          }
+        },
+        {
+          "name": "force_mmproj",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "force_mmproj"
+          }
+        },
+        {
+          "name": "enable_thinking",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "enable_thinking"
+          }
+        },
+        {
+          "name": "verbose",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "verbose"
+          }
+        },
+        {
+          "name": "debug",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "debug"
+          }
+        },
+        {
+          "name": "type_k",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "type_k"
+          }
+        },
+        {
+          "name": "type_v",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "type_v"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "config",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3VL_ModelConfig"
+      },
+      "widgets_values": [
+        "",
+        "",
+        8192,
+        512,
+        512,
+        -1,
+        0,
+        8,
+        true,
+        false,
+        true,
+        "qwen35",
+        "none",
+        false,
+        false,
+        false,
+        true,
+        "F16",
+        "F16"
+      ],
+      "title": "Simple Qwen base config"
+    },
+    {
+      "id": 3,
+      "type": "H3Scribe_AuthoringEditor",
+      "pos": [
+        380,
+        610
+      ],
+      "size": [
+        600,
+        560
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "authoring_json",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "authoring_json"
+          }
+        },
+        {
+          "name": "source_snapshot",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "source_snapshot"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "authoring_json",
+          "type": "STRING",
+          "links": [
+            3,
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_AuthoringEditor"
+      },
+      "widgets_values": [
+        "{\"mode\":\"ref2va\",\"reference_image_count\":1,\"initial_picture_number\":1,\"subjects\":[{\"label\":\"<Subject 1>\",\"picture_number\":1,\"source_role\":\"initial\",\"appearance_ja\":\"Long silver hair, blue eyes, and a red star hairpin.\"}],\"initial_ja\":\"<Subject 1>は両手を体の横に下ろして立っている。襟が紺色の白いシャツを着ている。背景は水色の単色。\",\"style_ja\":\"Anime style.\",\"throughout\":\"<Subject 1>はその場に立ったまま。\",\"shots\":[{\"start_time_seconds\":null,\"motion\":\"<Subject 1>は右手を上げ、右目の前で横向きのピースを作り、指の間から右目が見えるようにする。同時に左目を閉じてウインクする。\",\"camera\":\"Fixed camera\"}]}",
+        ""
+      ],
+      "title": "Quality Authoring — runner replaces per case"
+    },
+    {
+      "id": 4,
+      "type": "H3Scribe_ComposeQwenRequest",
+      "pos": [
+        1060,
+        130
+      ],
+      "size": [
+        320,
+        120
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "authoring_json",
+          "type": "STRING",
+          "link": 3
+        },
+        {
+          "name": "base_config",
+          "type": "STRING",
+          "link": 2,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "system_prompt",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "user_prompt",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "config_override",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_ComposeQwenRequest"
+      },
+      "widgets_values": [],
+      "title": "H3 Compose → Qwen"
+    },
+    {
+      "id": 5,
+      "type": "SimpleQwenVLggufV2",
+      "pos": [
+        1450,
+        40
+      ],
+      "size": [
+        390,
+        430
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "image3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "video",
+          "type": "*",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "system_prompt_override",
+          "type": "STRING",
+          "link": 4,
+          "shape": 7
+        },
+        {
+          "name": "config_override",
+          "type": "STRING",
+          "link": 6,
+          "shape": 7
+        },
+        {
+          "name": "model_preset",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model_preset"
+          }
+        },
+        {
+          "name": "system_preset",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "system_preset"
+          }
+        },
+        {
+          "name": "user_prompt",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "user_prompt"
+          }
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": 7,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "name": "unload_all_models",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "unload_all_models"
+          }
+        },
+        {
+          "name": "mode",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "mode"
+          }
+        },
+        {
+          "name": "variables",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            8,
+            10
+          ]
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "links": []
+        },
+        {
+          "name": "system_prompt",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "user_prompt",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SimpleQwenVLggufV2"
+      },
+      "widgets_values": [
+        "None",
+        "None",
+        "",
+        0,
+        false,
+        "keep_vram",
+        "fixed"
+      ],
+      "title": "Compose Qwen — real production node"
+    },
+    {
+      "id": 6,
+      "type": "H3Scribe_TextEditor",
+      "pos": [
+        1930,
+        30
+      ],
+      "size": [
+        520,
+        360
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 8
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "name": "source_snapshot",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "source_snapshot"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_TextEditor"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "title": "RAW QWEN OUTPUT — diagnostic capture"
+    },
+    {
+      "id": 7,
+      "type": "H3Scribe_ValidateAndRender",
+      "pos": [
+        1930,
+        500
+      ],
+      "size": [
+        340,
+        130
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "authoring_json",
+          "type": "STRING",
+          "link": 9
+        },
+        {
+          "name": "composer_json",
+          "type": "STRING",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "final_prompt",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_ValidateAndRender"
+      },
+      "widgets_values": [],
+      "title": "Production Validate & Render"
+    },
+    {
+      "id": 8,
+      "type": "H3Scribe_TextEditor",
+      "pos": [
+        2350,
+        470
+      ],
+      "size": [
+        560,
+        420
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 11
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "name": "source_snapshot",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "source_snapshot"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Scribe_TextEditor"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "title": "FINAL H3 PROMPT"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      5,
+      "STRING"
+    ],
+    [
+      5,
+      4,
+      1,
+      5,
+      9,
+      "STRING"
+    ],
+    [
+      6,
+      4,
+      2,
+      5,
+      6,
+      "STRING"
+    ],
+    [
+      7,
+      4,
+      3,
+      5,
+      10,
+      "INT"
+    ],
+    [
+      8,
+      5,
+      0,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      9,
+      3,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      10,
+      5,
+      0,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      11,
+      7,
+      0,
+      8,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.82,
+      "offset": [
+        720,
+        180
+      ]
+    },
+    "h3_quality": {
+      "schema_version": 1,
+      "raw_output_node": "6",
+      "final_output_node": "8",
+      "model_selector_node": "1",
+      "authoring_node": "3",
+      "validate_render_node": "7",
+      "simple_qwen_node": "5",
+      "input_overrides": {
+        "2": {
+          "chat_handler": "qwen35",
+          "debug": true
+        }
+      }
+    }
+  },
+  "version": 0.4
+}
