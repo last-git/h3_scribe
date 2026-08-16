@@ -73,7 +73,7 @@
         "Node name for S&R": "H3Scribe_QwenModelSelector"
       },
       "widgets_values": [
-        "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf",
+        "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf",
         "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
       ],
       "title": "Qwen model / mmproj"

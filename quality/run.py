@@ -47,7 +47,7 @@ from h3_scribe.semantics import composer_input, validate_composer_output  # noqa
 from h3_scribe.serialization import parse_model_json  # noqa: E402
 
 
-DEFAULT_MODEL = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf"
+DEFAULT_MODEL = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf"
 DEFAULT_MMPROJ = "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
 DEFAULT_WORKFLOW = ROOT / "quality" / "workflows" / "composer_quality.json"
 DEFAULT_ANALYZE_WORKFLOW = ROOT / "quality" / "workflows" / "analyze_quality.json"

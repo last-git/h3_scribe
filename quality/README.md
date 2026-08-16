@@ -35,11 +35,11 @@ uv run python quality/run.py --dry-run
 uv run python quality/run.py
 ```
 
-Q3 comparison:
+Q4 comparison / fallback:
 
 ```powershell
 uv run python quality/run.py `
-  --model Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf
+  --model Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf
 ```
 
 Open `quality/workflows/composer_quality.json` in ComfyUI to inspect the exact graph:
@@ -67,17 +67,17 @@ Dry-run:
 uv run python quality/run.py --suite analyze --dry-run
 ```
 
-Q4 baseline:
+Q3 default:
 
 ```powershell
 uv run python quality/run.py --suite analyze
 ```
 
-Q3 candidate:
+Q4 comparison / fallback:
 
 ```powershell
 uv run python quality/run.py --suite analyze `
-  --model Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf
+  --model Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf
 ```
 
 Open `quality/workflows/analyze_quality.json` in ComfyUI to inspect the exact graph. It contains separate Initial and Cast branches:
