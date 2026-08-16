@@ -40,6 +40,7 @@ ComfyUI Managerで `H3 Scribe` を検索してインストールしてくださ�
 - [ComfyUI_Simple_Qwen3-VL-gguf](https://github.com/KLL535/ComfyUI_Simple_Qwen3-VL-gguf)
 - このH3 Scribe node pack
 - Qwen解析モデル + mmproj
+- 推奨Qwenモデル: `Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf` + `mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf`（Q4_K_Pは品質比較・fallback用）
 - 使用するworkflowに対応したMiniMax H3モデル
 
 モデルの保存先とダウンロードリンクは、**各workflowの一番左にある Markdown Note** にまとめています。
@@ -104,6 +105,7 @@ Requirements:
 - [ComfyUI_Simple_Qwen3-VL-gguf](https://github.com/KLL535/ComfyUI_Simple_Qwen3-VL-gguf)
 - This H3 Scribe node pack
 - The Qwen analysis GGUF + mmproj
+- Recommended Qwen model: `Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf` + `mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf` (`Q4_K_P` is kept as a quality-comparison/fallback option)
 - The MiniMax H3 model files required by the chosen workflow
 
 Download links and model-folder locations are listed in the **Markdown Note at the far left of every workflow**.

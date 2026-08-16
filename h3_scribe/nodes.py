@@ -75,7 +75,7 @@ def _text_encoder_ggufs() -> tuple[list[str], list[str]]:
     model_files = [name for name in files if "mmproj" not in Path(name).name.casefold()] or files
     mmproj_files = [name for name in files if "mmproj" in Path(name).name.casefold()] or files
 
-    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf"
+    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf"
     preferred_mmproj = "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
 
     def prefer(items: list[str], basename: str) -> list[str]:

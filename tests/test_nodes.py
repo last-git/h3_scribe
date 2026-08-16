@@ -240,7 +240,7 @@ def test_qwen_model_selector_uses_comfy_gguf_registry(monkeypatch):
     import sys
     import types
 
-    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf"
+    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf"
     preferred_mmproj = "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
     files = [
         "other.gguf",
@@ -280,7 +280,7 @@ def test_qwen_model_selector_falls_back_to_registered_text_encoder_roots(monkeyp
     import sys
     import types
 
-    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf"
+    preferred_model = "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf"
     preferred_mmproj = "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf"
     categories = {
         "text_encoders": ["D:/ComfyUI/models/text_encoders", "E:/shared/text_encoders"]

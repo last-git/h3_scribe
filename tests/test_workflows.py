@@ -201,7 +201,7 @@ def test_qwen_runtime_details_stay_hidden_inside_analyze_and_compose():
         data = _load(name)
         selector = _node(data, type="H3Scribe_QwenModelSelector", root_only=True)
         assert selector["widgets_values"] == [
-            "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q4_K_P.gguf",
+            "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-Q3_K_P.gguf",
             "mmproj-Qwen3.6-27B-Uncensored-HauhauCS-Balanced-f16.gguf",
         ]
         assert not any(node["type"] == "Qwen3VL_ModelConfig" for node in data["nodes"])
