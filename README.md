@@ -1,5 +1,7 @@
 # H3 Scribe
 
+[![Test](https://github.com/last-git/h3_scribe/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/last-git/h3_scribe/actions/workflows/test.yml)
+
 MiniMax H3用の、ComfyUI内で完結するプロンプト作成支援ノードです。
 画像をQwenで解析し、編集可能なAuthoringを経由して、MiniMax H3用の最終プロンプトを生成します。
 
