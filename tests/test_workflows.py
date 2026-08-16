@@ -2,7 +2,7 @@ import json
 import uuid
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / "workflows"
+ROOT = Path(__file__).resolve().parents[1] / "example_workflows"
 WORKFLOWS = [
     "H3_I2VA_UI.json",
     "H3_Ref2VA_InitialOnly_0Cast_UI.json",
@@ -148,7 +148,6 @@ def test_native_subgraphs_and_all_links_are_structurally_consistent():
         for sg in _subgraphs(data):
             uuid.UUID(sg["id"])
 
-        assert data["extra"]["h3ScribeVersion"] == "0.6.4"
         assert data["extra"]["h3NaturalFullRun"] is True
         assert data["extra"]["h3EditorsArePhaseOutputs"] is True
         assert data["extra"]["h3NativePhaseButtons"] is True

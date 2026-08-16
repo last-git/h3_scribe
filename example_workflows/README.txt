@@ -1,4 +1,4 @@
-H3 Scribe workflows v0.6.4
+H3 Scribe workflows v1.0.0
 
 Open the workflow matching your task.
 A Quick Start / Models Markdown Note is placed at the far left of every workflow.
