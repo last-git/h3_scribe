@@ -51,3 +51,33 @@ def test_compose_request_is_text_only_and_uses_raw_unicode():
     assert config["force_mmproj"] is True
     assert config["max_tokens"] == 3072
     assert seed == 0
+
+
+def test_compose_request_hides_shot_start_timestamps_from_qwen():
+    authoring = AuthoringInput(
+        mode="ref2va",
+        reference_image_count=1,
+        initial_picture_number=None,
+        subjects=[
+            AuthoringSubject(
+                label="<Subject 1>",
+                picture_number=1,
+                source_role="cast",
+                appearance_ja="長い銀髪、青い目。",
+            )
+        ],
+        shots=[
+            UserShot(motion="<Subject 1>が右手を上げる。"),
+            UserShot(start_time_seconds=3.5, motion="<Subject 1>が左を向く。"),
+        ],
+    )
+
+    _, user, _, _ = compose_request(authoring)
+    semantic_text, _ = user.split("\n\n", 1)
+    semantic_payload = json.loads(semantic_text)
+
+    assert [shot["motion"] for shot in semantic_payload["shots"]] == [
+        "<Subject 1>が右手を上げる。",
+        "<Subject 1>が左を向く。",
+    ]
+    assert all("start_time_seconds" not in shot for shot in semantic_payload["shots"])

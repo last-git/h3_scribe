@@ -52,6 +52,10 @@ Authoring -> H3 Compose -> Simple Qwen -> RAW QWEN OUTPUT
 
 The runner executes to RAW first, then feeds the captured text into production `H3Scribe_ValidateAndRender` in a second cheap Comfy prompt. Qwen is not rerun during validation.
 
+The Composer suite contains 15 cases. In addition to the original single-shot sentinels it now covers three-shot separation, mixed camera operations, repeated Throughout/negation across shots, during-vs-after camera timing, active-role switching between two subjects, three-subject/two-picture routing, longer ordered/count sequences, and two-shot I2VA alias naturalization. Selected cases also declare forbidden cross-shot concepts so a later action leaking into an earlier shot is a failure.
+
+Reports also record per-shot and total semantic output character counts. These are diagnostics for Q3/Q4 verbosity comparison only; shorter prose is not itself a failure.
+
 ## Analyze suite
 
 Analyze uses the restored old H3 Studio quality fixtures:
@@ -59,6 +63,9 @@ Analyze uses the restored old H3 Studio quality fixtures:
 ```text
 quality/fixtures/builder_quality/two_silver_black.png
 quality/fixtures/builder_quality/single_brown.png
+quality/fixtures/multi_reference/two_subjects.png
+quality/fixtures/multi_reference/single_red.png
+quality/fixtures/multi_reference/single_blue.png
 ```
 
 Dry-run:
@@ -94,10 +101,13 @@ fixture PNG -> LoadImage -> H3 Initial/Cast -> Simple Qwen -> RAW QWEN OUTPUT
 
 For real runs, `quality/run.py` uploads each fixed PNG to ComfyUI's normal `/upload/image` endpoint and replaces only the corresponding `LoadImage.image` value. It first runs to RAW Qwen output. A second cheap Comfy prompt replaces the linked canonicalizer input with that captured JSON, which prunes LoadImage/Qwen from the closure and exercises production canonicalization + Authoring bootstrap without a second inference.
 
-Analyze sentinels cover the historical image-quality regressions:
+Analyze sentinels cover both the realistic historical fixtures and the restored synthetic 2/1/1-subject fixtures:
 
-- Initial fixture: exactly two visible subjects in stable order; silver/white hair + star accessory for the left subject; black/dark hair + glasses for the right subject; both local aliases present in `initial_ja`; non-empty style.
-- Cast fixture: brown/reddish hair + crescent/moon accessory; no pose/scene leakage into Appearance.
+- Realistic Initial: exactly two visible subjects in stable order; silver/white hair + star accessory for the left subject; black/dark hair + glasses for the right subject; both local aliases present in `initial_ja`; non-empty style.
+- Realistic Cast: brown/reddish hair + crescent/moon accessory; no pose/scene leakage into Appearance.
+- Synthetic Initial: two subjects with the same silver/star vs black/glasses identity separation, local references, and non-empty style.
+- Synthetic Cast red: red/reddish hair + yellow/gold clothing.
+- Synthetic Cast blue: blue hair + glasses + purple clothing.
 - Production canonicalization: local `subject_N` aliases become `<Subject N>`; Initial/Cast picture provenance is preserved; Appearance/style are not rewritten.
 
 ## Model/runtime configuration
