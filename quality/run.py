@@ -909,6 +909,34 @@ def _validate_sentinels(case: Case, inputs: ComposerInput, output: ComposerOutpu
         ]
     )
 
+    leaked_shot_labels = sorted(
+        set(re.findall(r"\[Shot [1-9][0-9]*\]", all_output_text, flags=re.IGNORECASE)),
+        key=str.casefold,
+    )
+    if leaked_shot_labels:
+        errors.append(
+            "emitted renderer-owned shot labels: " + ", ".join(leaked_shot_labels)
+        )
+
+    leaked_timestamps = sorted(
+        set(re.findall(r"\bAt\s+\d{2}:\d{2}(?:\.\d+)?\b", all_output_text, flags=re.IGNORECASE)),
+        key=str.casefold,
+    )
+    if leaked_timestamps:
+        errors.append(
+            "emitted renderer-owned shot timestamps: " + ", ".join(leaked_timestamps)
+        )
+
+    bare_subject_labels = sorted(
+        set(re.findall(r"(?<!<)\bSubject [1-9][0-9]*\b(?!>)", all_output_text, flags=re.IGNORECASE)),
+        key=str.casefold,
+    )
+    if bare_subject_labels:
+        errors.append(
+            "bare subject labels must use canonical <Subject N> syntax: "
+            + ", ".join(bare_subject_labels)
+        )
+
     known_labels = {s.label for s in inputs.subjects}
     emitted_labels = set(re.findall(r"<Subject [1-9][0-9]*>", all_output_text))
     if inputs.mode == "ref2va":
@@ -925,8 +953,6 @@ def _validate_sentinels(case: Case, inputs: ComposerInput, output: ComposerOutpu
             errors.append(f"Shot {index} emitted renderer-owned detailed_description syntax")
         if "summary:" in lowered:
             errors.append(f"Shot {index} emitted renderer-owned summary syntax")
-        if f"[shot {index}]" in lowered:
-            errors.append(f"Shot {index} emitted its own shot label")
         if index <= len(case.required_by_shot):
             for required in case.required_by_shot[index - 1]:
                 if not _matches_concept(text, required):

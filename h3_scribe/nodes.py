@@ -269,13 +269,18 @@ class H3ValidateAndRender:
 
 
 def _merge_analyzed_authoring(current: AuthoringInput, analyzed: AuthoringInput) -> AuthoringInput:
-    """Refresh image-derived fields while preserving authoritative user instructions.
+    """Refresh Analyze-owned fields while preserving authoritative user instructions.
 
-    Analyze owns the reference/provenance fields, Subject Appearance, Initial and Style.
-    The user owns Throughout and the complete Shots array. Temporary dangling Subject
-    references are allowed here so the user can repair preserved instructions before Compose.
+    Analyze always owns reference/provenance fields and Subject Appearance. Initial and Style
+    are Analyze-owned only when an Initial picture exists; in Cast-only Ref2VA they are
+    user-authored fields and must survive Cast re-analysis. The user always owns Throughout and
+    the complete Shots array. Temporary dangling Subject references are allowed here so the user
+    can repair preserved instructions before Compose.
     """
     merged = analyzed.model_dump(mode="python")
+    if analyzed.initial_picture_number is None:
+        merged["initial_ja"] = current.initial_ja
+        merged["style_ja"] = current.style_ja
     merged["throughout"] = current.throughout
     merged["shots"] = [shot.model_dump(mode="python") for shot in current.shots]
     return AuthoringInput.model_validate(merged)
