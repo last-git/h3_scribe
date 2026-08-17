@@ -28,6 +28,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# Model output may contain characters outside Windows' legacy console code page.
+for stream in (sys.stdout, sys.stderr):
+    reconfigure = getattr(stream, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(encoding="utf-8", errors="replace")
+
 # Make `python quality/run.py` work from a source checkout without installation.
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -53,6 +59,9 @@ DEFAULT_WORKFLOW = ROOT / "quality" / "workflows" / "composer_quality.json"
 DEFAULT_ANALYZE_WORKFLOW = ROOT / "quality" / "workflows" / "analyze_quality.json"
 INITIAL_FIXTURE = ROOT / "quality" / "fixtures" / "builder_quality" / "two_silver_black.png"
 CAST_FIXTURE = ROOT / "quality" / "fixtures" / "builder_quality" / "single_brown.png"
+SYNTHETIC_TWO_FIXTURE = ROOT / "quality" / "fixtures" / "multi_reference" / "two_subjects.png"
+SYNTHETIC_RED_FIXTURE = ROOT / "quality" / "fixtures" / "multi_reference" / "single_red.png"
+SYNTHETIC_BLUE_FIXTURE = ROOT / "quality" / "fixtures" / "multi_reference" / "single_blue.png"
 
 
 @dataclass(frozen=True)
@@ -67,6 +76,7 @@ class Case:
     name: str
     authoring: AuthoringInput
     required_by_shot: tuple[tuple[RequiredConcept, ...], ...] = ()
+    forbidden_by_shot: tuple[tuple[RequiredConcept, ...], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -74,12 +84,11 @@ class AnalyzeCase:
     name: str
     kind: str
     fixture: Path
-
-
-ANALYZE_CASES: list[AnalyzeCase] = [
-    AnalyzeCase("initial_two_silver_black", "initial", INITIAL_FIXTURE),
-    AnalyzeCase("cast_single_brown", "cast", CAST_FIXTURE),
-]
+    expected_subjects: int
+    subject_concepts: tuple[tuple[RequiredConcept, ...], ...]
+    require_initial_subject_refs: bool = False
+    require_style: bool = False
+    forbidden_appearance_terms: tuple[str, ...] = ()
 
 
 def concept(
@@ -88,6 +97,86 @@ def concept(
     patterns: tuple[str, ...] = (),
 ) -> RequiredConcept:
     return RequiredConcept(name=name, alternatives=alternatives, patterns=patterns)
+
+
+SILVER_HAIR = concept(
+    "silver/white hair",
+    "銀髪", "銀色", "シルバー", "白髪", "白い髪", "灰色", "グレー",
+    "silver hair", "white hair", "gray hair", "grey hair",
+)
+BLACK_HAIR = concept(
+    "black/dark hair",
+    "黒髪", "黒い髪", "黒の髪", "黒色の髪", "黒い短髪", "黒の短髪",
+    "黒色の短髪", "黒いショートヘア", "黒のショートヘア", "ブラックヘア",
+    "ブラックの髪", "ダークヘア", "black hair", "dark hair",
+)
+RED_HAIR = concept(
+    "red/reddish hair",
+    "赤髪", "赤い髪", "赤毛", "赤茶", "赤褐色", "栗色", "auburn", "red hair",
+)
+BLUE_HAIR = concept(
+    "blue hair",
+    "青髪", "青い髪", "青色の髪", "青い短髪", "青色の短髪", "青いショートヘア",
+    "ブルーの髪", "blue hair",
+)
+BROWN_HAIR = concept(
+    "brown/reddish hair",
+    "茶髪", "茶色", "ブラウン", "赤褐色", "赤茶", "栗色", "auburn", "brown hair",
+)
+GLASSES = concept("glasses", "眼鏡", "メガネ", "めがね", "グラス", "glasses")
+STAR_ACCESSORY = concept("star hair accessory", "星", "スター", "star")
+CRESCENT_ACCESSORY = concept("crescent/moon hair accessory", "三日月", "月", "ムーン", "クレセント", "crescent", "moon")
+YELLOW_CLOTHING = concept("yellow/gold clothing", "黄色", "黄土色", "からし色", "マスタード", "ゴールド", "yellow", "mustard", "gold")
+PURPLE_CLOTHING = concept("purple clothing", "紫", "パープル", "purple", "violet")
+
+CAST_STATE_SCENE_TERMS = (
+    "本を持", "本を抱", "図書館", "背景", "立って", "座って", "歩いて", "手を伸ば",
+)
+
+ANALYZE_CASES: list[AnalyzeCase] = [
+    AnalyzeCase(
+        "initial_two_silver_black",
+        "initial",
+        INITIAL_FIXTURE,
+        expected_subjects=2,
+        subject_concepts=((SILVER_HAIR, STAR_ACCESSORY), (BLACK_HAIR, GLASSES)),
+        require_initial_subject_refs=True,
+        require_style=True,
+    ),
+    AnalyzeCase(
+        "cast_single_brown",
+        "cast",
+        CAST_FIXTURE,
+        expected_subjects=1,
+        subject_concepts=((BROWN_HAIR, CRESCENT_ACCESSORY),),
+        forbidden_appearance_terms=CAST_STATE_SCENE_TERMS,
+    ),
+    AnalyzeCase(
+        "initial_synthetic_two_subjects",
+        "initial",
+        SYNTHETIC_TWO_FIXTURE,
+        expected_subjects=2,
+        subject_concepts=((SILVER_HAIR, STAR_ACCESSORY), (BLACK_HAIR, GLASSES)),
+        require_initial_subject_refs=True,
+        require_style=True,
+    ),
+    AnalyzeCase(
+        "cast_synthetic_red",
+        "cast",
+        SYNTHETIC_RED_FIXTURE,
+        expected_subjects=1,
+        subject_concepts=((RED_HAIR, YELLOW_CLOTHING),),
+        forbidden_appearance_terms=CAST_STATE_SCENE_TERMS,
+    ),
+    AnalyzeCase(
+        "cast_synthetic_blue",
+        "cast",
+        SYNTHETIC_BLUE_FIXTURE,
+        expected_subjects=1,
+        subject_concepts=((BLUE_HAIR, GLASSES, PURPLE_CLOTHING),),
+        forbidden_appearance_terms=CAST_STATE_SCENE_TERMS,
+    ),
+]
 
 
 def subject(
@@ -238,6 +327,9 @@ CASES: list[Case] = [
                 "while",
                 "as the hand rises",
                 "as the hand is raised",
+                "as the right hand lifts",
+                "as the right hand rises",
+                "as the right hand is raised",
                 patterns=(
                     r"\bcamera\b[^.!?]{0,180}\b(?:doll(?:y|ies)|push(?:es)?)\b[^.!?]{0,120}\bduring (?:the|this) (?:movement|motion)\b",
                 ),
@@ -486,6 +578,296 @@ CASES: list[Case] = [
             ),
         ),),
     ),
+    Case(
+        "ref2va_three_shots_camera_diversity",
+        ref_authoring(
+            subjects=[subject(appearance="Long silver hair and blue eyes.")],
+            initial_ja="<Subject 1>は正面を向いて画面中央に立っている。",
+            shots=[
+                UserShot(motion="<Subject 1>は右手を一度振る。", camera="Fixed camera"),
+                UserShot(
+                    start_time_seconds=3.0,
+                    motion="<Subject 1>はゆっくり顔を左へ向ける。",
+                    camera="顔を左へ向けている間、カメラをゆっくり右へパンする。",
+                ),
+                UserShot(
+                    start_time_seconds=6.0,
+                    motion="<Subject 1>は一歩だけ後ろへ下がる。",
+                    camera="一歩後ろへ下がる間、カメラをゆっくりドリーアウトする。",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("single right-hand wave", "right hand", "right-hand"),
+                concept("one wave", "once", "one time", "single wave"),
+                fixed_camera(),
+            ),
+            (
+                concept(
+                    "head turns left",
+                    "turns her head left",
+                    "turns their head left",
+                    "turns his head left",
+                    "turns her face to the left",
+                    "turns their face to the left",
+                    "turns his face to the left",
+                    "turning her face to the left",
+                    "turning their face to the left",
+                    "turning his face to the left",
+                    "turns to the left",
+                    "faces left",
+                ),
+                concept("slow right pan", "slowly pans right", "slow pan to the right", "slow pan right", "pans slowly to the right"),
+                concept("camera during head turn", "while", "during", "as"),
+            ),
+            (
+                concept("one backward step", "one step back", "a step back", "one step backward", "a single step backward", "steps back once"),
+                concept("dolly-out camera operation", "dolly out", "dolly-out", "dollies out", "pulls back", "pull back"),
+                concept("camera during backward step", "while", "during", "as"),
+            ),
+        ),
+        forbidden_by_shot=(
+            (
+                concept("future pan leaked into Shot 1", "pan right", "pans right", "pan to the right"),
+                concept("future dolly leaked into Shot 1", "dolly out", "dollies out", "pulls back"),
+            ),
+            (
+                concept("Shot 1 wave leaked into Shot 2", "wave", "waves", "waving"),
+                concept("Shot 3 backward step leaked into Shot 2", "step back", "steps back", "backward step"),
+            ),
+            (
+                concept("Shot 1 wave leaked into Shot 3", "wave", "waves", "waving"),
+                concept("Shot 2 pan leaked into Shot 3", "pan right", "pans right", "pan to the right"),
+            ),
+        ),
+    ),
+    Case(
+        "ref2va_throughout_and_negation_across_two_shots",
+        ref_authoring(
+            subjects=[subject(appearance="Short brown hair and round glasses.")],
+            initial_ja="<Subject 1>は机に向かって座り、両手を机の上に置いている。",
+            throughout="<Subject 1>は左手を机の上に置いたまま、座った姿勢を保つ。",
+            shots=[
+                UserShot(
+                    motion="<Subject 1>は右手だけをゆっくり持ち上げる。左手は動かさない。",
+                    camera="Fixed camera",
+                ),
+                UserShot(
+                    start_time_seconds=4.0,
+                    motion="<Subject 1>は右手だけをゆっくり机へ戻す。左手は動かさない。",
+                    camera="カメラをゆっくり左へパンする。",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("right hand rises", "right hand", "right-hand"),
+                concept("left hand remains on desk", "left hand on the desk", "left hand remains on the desk", "left hand stays on the desk", "keeping the left hand on the desk"),
+                concept("left hand does not move", "left hand remains still", "left hand stays still", "left hand remains motionless", "left hand is motionless", "without moving the left hand", "left hand does not move"),
+                concept("seated posture persists", "remains seated", "stays seated", "maintains a seated posture", "seated posture"),
+                fixed_camera(),
+            ),
+            (
+                concept("right hand returns to desk", "right hand", "right-hand"),
+                concept("hand lowers/returns", "lowers", "lowering", "returns", "returning", "brings", "back to the desk", "onto the desk"),
+                concept("left hand remains on desk", "left hand on the desk", "left hand remains on the desk", "left hand stays on the desk", "keeping the left hand on the desk"),
+                concept("left hand does not move", "left hand remains still", "left hand stays still", "left hand remains motionless", "left hand is motionless", "without moving the left hand", "left hand does not move"),
+                concept("seated posture persists", "remains seated", "stays seated", "maintains a seated posture", "seated posture"),
+                concept("slow left pan", "slowly pans left", "slow pan to the left", "slow pan left", "pans slowly to the left"),
+            ),
+        ),
+    ),
+    Case(
+        "ref2va_camera_timing_during_vs_after",
+        ref_authoring(
+            subjects=[subject(appearance="Short black hair and a white shirt.")],
+            initial_ja="<Subject 1>は赤いカップの前に立っている。",
+            shots=[
+                UserShot(
+                    motion="<Subject 1>は右手を赤いカップへ伸ばしてつかむ。",
+                    camera="右手をカップへ伸ばしている間だけ、カメラをゆっくりドリーインする。",
+                ),
+                UserShot(
+                    start_time_seconds=3.0,
+                    motion="<Subject 1>は赤いカップを机に置き、右手をカップから離す。",
+                    camera="右手がカップから離れた後だけ、カメラをゆっくり右へパンする。",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("right hand reaches for cup", "right hand", "right-hand"),
+                concept("red cup", "red cup"),
+                concept("dolly-in camera operation", "dolly in", "dolly-in", "dollies in", "push in", "push-in"),
+                concept("dolly occurs during reach", "while", "during", "as"),
+            ),
+            (
+                concept("cup placed on desk", "places the red cup", "placing the red cup", "puts the red cup", "sets the red cup", "places the cup", "placing the cup", "puts the cup", "sets the cup"),
+                concept("right hand releases cup", "releases", "releasing", "lets go", "moves his right hand away", "moves her right hand away", "moves their right hand away", "right hand away"),
+                concept("camera action occurs after release", "after", "only after", "once"),
+                concept("slow right pan", "slowly pans right", "slow pan to the right", "slow pan right", "pans slowly to the right"),
+            ),
+        ),
+        forbidden_by_shot=(
+            (concept("future right pan leaked into Shot 1", "pan right", "pans right", "pan to the right"),),
+            (concept("Shot 1 dolly leaked into Shot 2", "dolly in", "dollies in", "push in"),),
+        ),
+    ),
+    Case(
+        "ref2va_two_subjects_role_switch_two_shots",
+        ref_authoring(
+            subjects=[
+                subject(appearance="Long silver hair and blue eyes."),
+                subject("<Subject 2>", appearance="Short black hair and round glasses."),
+            ],
+            initial_ja="<Subject 1>は画面左、<Subject 2>は画面右に立っている。<Subject 1>は赤いボールを持っている。",
+            shots=[
+                UserShot(
+                    motion="<Subject 1>が右手で赤いボールを<Subject 2>へ渡し、<Subject 2>は左手で受け取る。",
+                    camera="Fixed camera",
+                ),
+                UserShot(
+                    start_time_seconds=4.0,
+                    motion="<Subject 2>は左手の赤いボールを頭より高く持ち上げる。<Subject 1>は両手を下ろしたまま。",
+                    camera="Fixed camera",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("Subject 1 gives ball", "<Subject 1>", "Subject 1"),
+                concept("Subject 1 right hand", "right hand", "right-hand"),
+                concept("ball transfer", "passes", "hands", "gives", "offers", "red ball"),
+                concept("Subject 2 receives", "<Subject 2>", "Subject 2"),
+                concept("Subject 2 left hand", "left hand", "left-hand"),
+                concept("receives ball", "receives", "takes", "accepts", "grasps", "catches"),
+                fixed_camera(),
+            ),
+            (
+                concept("Subject 2 active", "<Subject 2>", "Subject 2"),
+                concept("left-hand ball raise", "left hand", "left-hand"),
+                concept("ball raised above head", "above", "over", "higher than", "head"),
+                concept("Subject 1 passive", "<Subject 1>", "Subject 1"),
+                concept("Subject 1 hands remain down", "both hands down", "both arms down", "hands lowered", "arms lowered", "hands at their sides", "arms at their sides"),
+                fixed_camera(),
+            ),
+        ),
+        forbidden_by_shot=(
+            (concept("future above-head raise leaked into Shot 1", "above the head", "above their head", "above his head", "above her head"),),
+            (concept("Shot 1 transfer leaked into Shot 2", "passes the ball", "hands the ball", "gives the ball"),),
+        ),
+    ),
+    Case(
+        "ref2va_three_subjects_two_pictures_shot_routing",
+        ref_authoring(
+            subjects=[
+                subject(appearance="Long silver hair."),
+                subject("<Subject 2>", appearance="Short black hair and glasses."),
+                subject("<Subject 3>", picture=2, role="cast", appearance="Short auburn hair and a red scarf."),
+            ],
+            reference_image_count=2,
+            initial_picture_number=1,
+            initial_ja="<Subject 1>は画面左、<Subject 2>は中央、<Subject 3>は画面右に立っている。",
+            shots=[
+                UserShot(
+                    motion="<Subject 1>が<Subject 3>へゆっくり近づく。<Subject 2>はその場から動かない。",
+                    camera="三人を収めたミディアムショット。Fixed camera",
+                ),
+                UserShot(
+                    start_time_seconds=4.0,
+                    motion="<Subject 2>が<Subject 3>へ右手を一度振る。<Subject 1>はその場から動かない。",
+                    camera="<Subject 2>から<Subject 3>の方向へゆっくり右へパンする。",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("Subject 1 approaches Subject 3", "<Subject 1>", "Subject 1"),
+                concept("Subject 3 target", "<Subject 3>", "Subject 3"),
+                concept("approach", "approaches", "moves toward", "walks toward", "comes closer"),
+                concept("Subject 2 remains still", "<Subject 2>", "Subject 2"),
+                concept("stationary passive subject", "remains still", "stays still", "remains stationary", "stays stationary", "does not move", "remains in place", "stays in place"),
+                concept("medium framing", "medium shot", "medium view"),
+                fixed_camera(),
+            ),
+            (
+                concept("Subject 2 waves", "<Subject 2>", "Subject 2"),
+                concept("Subject 3 wave target", "<Subject 3>", "Subject 3"),
+                concept("right-hand wave", "right hand", "right-hand"),
+                concept("one wave", "once", "one time", "single wave"),
+                concept("Subject 1 remains still", "<Subject 1>", "Subject 1"),
+                concept("stationary passive subject", "remains still", "stays still", "remains stationary", "stays stationary", "does not move", "remains in place", "stays in place"),
+                concept("slow right pan", "slowly pans right", "slow pan to the right", "slow pan right", "pans slowly to the right"),
+            ),
+        ),
+        forbidden_by_shot=(
+            (concept("future wave leaked into Shot 1", "waves", "waving", "wave to"),),
+            (concept("Shot 1 approach leaked into Shot 2", "approaches", "moves toward", "walks toward", "comes closer"),),
+        ),
+    ),
+    Case(
+        "ref2va_three_step_order_count_direction",
+        ref_authoring(
+            subjects=[subject(appearance="Long navy hair and a white jacket.")],
+            initial_ja="<Subject 1>は正面を向いて立っている。",
+            shots=[
+                UserShot(
+                    motion="<Subject 1>は右手を上下に3回動かし、その後左を向き、その後一歩だけ後ろへ下がる。",
+                    camera="すべての動作が終わった後だけ、カメラをゆっくり右へパンする。",
+                )
+            ],
+        ),
+        required_by_shot=((
+            concept("right-hand repeated movement", "right hand", "right-hand"),
+            concept("three repetitions", "three times", "3 times", "three repetitions"),
+            concept("then turns left", "then turns left", "then turns to the left", "afterward turns left", "turns left"),
+            concept("one backward step", "one step back", "a step back", "one step backward", "a single step backward", "steps back once"),
+            concept("camera only after all motion", "after", "only after", "once all", "after all"),
+            concept("slow right pan", "slowly pans right", "slow pan to the right", "slow pan right", "pans slowly to the right"),
+        ),),
+    ),
+    Case(
+        "i2va_two_explicit_shots_alias_and_camera",
+        AuthoringInput(
+            mode="i2va",
+            reference_image_count=1,
+            initial_picture_number=1,
+            subjects=[
+                subject(appearance="Long silver hair and blue eyes."),
+                subject("<Subject 2>", appearance="Short black hair, round glasses, and a black jacket."),
+            ],
+            initial_ja="<Subject 1>は画面左側に立ち、<Subject 2>は画面右側に座っている。",
+            style_ja="Anime style.",
+            throughout="",
+            shots=[
+                UserShot(motion="<Subject 1>は右手をゆっくり上げる。", camera="Fixed camera"),
+                UserShot(
+                    start_time_seconds=3.5,
+                    motion="<Subject 2>は立ち上がり、<Subject 1>の方へ左に歩く。",
+                    camera="<Subject 2>が歩いている間、カメラをゆっくり左へパンする。",
+                ),
+            ],
+        ),
+        required_by_shot=(
+            (
+                concept("first person raises right hand", "right hand", "right-hand"),
+                concept("slow hand raise", "slowly", "slow"),
+                fixed_camera(),
+            ),
+            (
+                concept("second person stands up", "stands up", "rises", "gets up", "stands from"),
+                concept("second person moves left", "walks left", "moves left", "to the left"),
+                concept("moves toward first person", "toward", "towards", "approaches", "moves closer"),
+                concept("slow left pan", "slowly pans left", "slow pan to the left", "slow pan left", "pans slowly to the left"),
+                concept("camera follows action timing", "while", "during", "as"),
+            ),
+        ),
+        forbidden_by_shot=(
+            (concept("future stand/walk leaked into Shot 1", "stands up", "gets up", "walks left", "moves left"),),
+            (),
+        ),
+    ),
 ]
 
 
@@ -501,6 +883,13 @@ def _contains_flexible_phrase(text: str, phrase: str) -> bool:
     gap = r"\b(?:\W+\w+){0,2}\W+\b"
     pattern = r"\b" + gap.join(re.escape(word) for word in words) + r"\b"
     return re.search(pattern, lowered) is not None
+
+
+def _matches_concept(text: str, item: RequiredConcept) -> bool:
+    return any(_contains_flexible_phrase(text, alt) for alt in item.alternatives) or any(
+        re.search(pattern, text, flags=re.IGNORECASE) is not None
+        for pattern in item.patterns
+    )
 
 
 def _validate_sentinels(case: Case, inputs: ComposerInput, output: ComposerOutput) -> list[str]:
@@ -540,17 +929,15 @@ def _validate_sentinels(case: Case, inputs: ComposerInput, output: ComposerOutpu
             errors.append(f"Shot {index} emitted its own shot label")
         if index <= len(case.required_by_shot):
             for required in case.required_by_shot[index - 1]:
-                phrase_match = any(
-                    _contains_flexible_phrase(text, alternative)
-                    for alternative in required.alternatives
-                )
-                pattern_match = any(
-                    re.search(pattern, text, flags=re.IGNORECASE) is not None
-                    for pattern in required.patterns
-                )
-                if not (phrase_match or pattern_match):
+                if not _matches_concept(text, required):
                     errors.append(
                         f"Shot {index} lost required semantic concept: {required.name}"
+                    )
+        if index <= len(case.forbidden_by_shot):
+            for forbidden in case.forbidden_by_shot[index - 1]:
+                if _matches_concept(text, forbidden):
+                    errors.append(
+                        f"Shot {index} contains forbidden cross-shot concept: {forbidden.name}"
                     )
 
     if output.shots and output.shots[0].description.lstrip().casefold().startswith(
@@ -849,69 +1236,43 @@ def _validate_analyze_payload(
     payload: InitialPicturePayload | CastPicturePayload,
 ) -> list[str]:
     errors: list[str] = []
+
     if case.kind == "initial":
         if not isinstance(payload, InitialPicturePayload):
             return ["Initial case did not parse as InitialPicturePayload"]
-        if len(payload.subjects) != 2:
-            errors.append(f"expected exactly 2 people, got {len(payload.subjects)}")
-        if len(payload.subjects) >= 1:
-            first = payload.subjects[0].appearance_ja
-            if not _analyze_has_any(
-                first,
-                ("銀髪", "銀色", "シルバー", "白髪", "白い髪", "灰色", "グレー"),
-            ):
-                errors.append("subject_0 silver/white hair missing")
-            if not _analyze_has_any(first, ("星", "スター")):
-                errors.append("subject_0 star hair accessory missing")
-            if "subject_" in first.casefold():
-                errors.append("subject_0 Appearance leaked a local subject token")
-        if len(payload.subjects) >= 2:
-            second = payload.subjects[1].appearance_ja
-            if not _analyze_has_any(
-                second,
-                (
-                    "黒髪",
-                    "黒い髪",
-                    "黒の髪",
-                    "黒色の髪",
-                    "黒い短髪",
-                    "黒の短髪",
-                    "黒色の短髪",
-                    "黒いショートヘア",
-                    "黒のショートヘア",
-                    "ブラックヘア",
-                    "ブラックの髪",
-                    "ダークヘア",
-                    "black hair",
-                    "dark hair",
-                ),
-            ):
-                errors.append("subject_1 black/dark hair missing")
-            if not _analyze_has_any(second, ("眼鏡", "メガネ", "めがね", "グラス")):
-                errors.append("subject_1 glasses missing")
-            if "subject_" in second.casefold():
-                errors.append("subject_1 Appearance leaked a local subject token")
-        if "subject_0" not in payload.initial_ja:
-            errors.append("Initial description lost subject_0")
-        if "subject_1" not in payload.initial_ja:
-            errors.append("Initial description lost subject_1")
-        if not payload.style_ja.strip():
-            errors.append("Initial style_ja unexpectedly empty")
+        appearances = [item.appearance_ja for item in payload.subjects]
     else:
         if not isinstance(payload, CastPicturePayload):
             return ["Cast case did not parse as CastPicturePayload"]
-        appearance = payload.appearance_ja
-        if not _analyze_has_any(
-            appearance,
-            ("茶髪", "茶色", "ブラウン", "赤褐色", "赤茶", "栗色", "auburn"),
-        ):
-            errors.append("Cast brown/reddish hair missing")
-        if not _analyze_has_any(appearance, ("三日月", "月", "ムーン", "クレセント")):
-            errors.append("Cast crescent/moon hair accessory missing")
-        if _analyze_has_any(appearance, ("本を持", "本を抱", "図書館", "背景", "立って")):
-            errors.append("Cast non-Appearance state/scene leaked into appearance_ja")
+        appearances = [payload.appearance_ja]
+
+    if len(appearances) != case.expected_subjects:
+        errors.append(f"expected exactly {case.expected_subjects} people, got {len(appearances)}")
+
+    for index, required_concepts in enumerate(case.subject_concepts):
+        if index >= len(appearances):
+            continue
+        appearance = appearances[index]
+        for required in required_concepts:
+            if not _matches_concept(appearance, required):
+                errors.append(f"subject_{index} {required.name} missing")
         if "subject_" in appearance.casefold():
-            errors.append("Cast Appearance leaked a local subject token")
+            errors.append(f"subject_{index} Appearance leaked a local subject token")
+        for forbidden in case.forbidden_appearance_terms:
+            if forbidden.casefold() in appearance.casefold():
+                errors.append(
+                    f"subject_{index} non-Appearance state/scene leaked into appearance_ja: {forbidden}"
+                )
+
+    if case.kind == "initial":
+        assert isinstance(payload, InitialPicturePayload)
+        if case.require_initial_subject_refs:
+            for index in range(case.expected_subjects):
+                if f"subject_{index}" not in payload.initial_ja:
+                    errors.append(f"Initial description lost subject_{index}")
+        if case.require_style and not payload.style_ja.strip():
+            errors.append("Initial style_ja unexpectedly empty")
+
     return errors
 
 
@@ -1912,6 +2273,16 @@ def main(argv: list[str] | None = None) -> int:
         }
         if baseline is not None and gpu.peak is not None:
             metrics["gpu_memory_peak_delta_mib"] = gpu.peak - baseline
+        if parsed is not None:
+            shot_lengths = [len(item.description) for item in parsed.shots]
+            metrics["summary_chars"] = len(parsed.summary_overview)
+            metrics["shot_description_chars"] = shot_lengths
+            metrics["total_semantic_output_chars"] = (
+                len(parsed.summary_overview)
+                + len(parsed.style_description)
+                + sum(len(item.appearance_en) for item in parsed.subject_appearances)
+                + sum(shot_lengths)
+            )
 
         case_report = {
             "name": case.name,

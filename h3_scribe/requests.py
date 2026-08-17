@@ -106,7 +106,10 @@ def compose_request(
     prompt_name = (
         "builder_compose_ref2va.md" if authoring.mode == "ref2va" else "builder_compose_i2va.md"
     )
-    semantic_json = dump_json(inputs, pretty=False)
+    semantic_payload = inputs.model_dump(
+        mode="json", exclude={"shots": {"__all__": {"start_time_seconds"}}}
+    )
+    semantic_json = dump_json(semantic_payload, pretty=False)
     user_prompt = semantic_json + "\n\n" + _schema_instruction(ComposerOutput)
     return (
         _read_prompt(prompt_name),

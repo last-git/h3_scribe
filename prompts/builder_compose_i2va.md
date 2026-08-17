@@ -39,9 +39,9 @@ Appearance item during the shot, such as removing glasses or shoes.
 
 Write coherent playback-order prose. Add only brief physically necessary connective motion/passive
 response. Do not invent independent actions, expressions, objects, scene changes, story, dialogue,
-or camera operations. Shot 1 must not begin with a cut. Later shots should grammatically continue the
-renderer-owned `[Shot N] At MM:SS.mmm, ` prefix and normally describe a cut/transition unless another
-transition was specified. Do not write labels or timestamps yourself.
+or camera operations. Shot 1 must not begin with a cut. Later shots should normally begin with a
+natural cut/transition unless another transition was specified. Each description contains only
+natural-language shot prose; do not include shot labels, start timestamps, or H3 syntax.
 
 Input may be Japanese, English, or mixed. Translate faithfully. Return no canonical <Subject N>
 aliases, Markdown, H3 section names, or explanations.
