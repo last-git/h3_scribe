@@ -142,8 +142,10 @@ def test_authoring_editor_first_source_bootstraps_empty_state():
     assert result["ui"]["h3_editor_source"] == [source]
 
 
-def test_authoring_editor_changed_source_refreshes_image_fields_but_preserves_user_instructions():
+def test_authoring_editor_changed_initial_source_refreshes_image_fields_but_preserves_user_instructions():
     current = json.loads(_authoring_json("user motion"))
+    current["initial_picture_number"] = 1
+    current["subjects"][0]["source_role"] = "initial"
     current["initial_ja"] = "old initial"
     current["style_ja"] = "old style"
     current["throughout"] = "keep throughout"
@@ -155,6 +157,8 @@ def test_authoring_editor_changed_source_refreshes_image_fields_but_preserves_us
     current_text = json.dumps(current, ensure_ascii=False)
 
     analyzed = json.loads(_authoring_json("analysis default motion"))
+    analyzed["initial_picture_number"] = 1
+    analyzed["subjects"][0]["source_role"] = "initial"
     analyzed["initial_ja"] = "new initial"
     analyzed["style_ja"] = "new style"
     analyzed["subjects"][0]["appearance_ja"] = "new appearance"
@@ -164,6 +168,29 @@ def test_authoring_editor_changed_source_refreshes_image_fields_but_preserves_us
     merged = json.loads(result["result"][0])
     assert merged["initial_ja"] == "new initial"
     assert merged["style_ja"] == "new style"
+    assert merged["subjects"][0]["appearance_ja"] == "new appearance"
+    assert merged["throughout"] == "keep throughout"
+    assert merged["shots"] == current["shots"]
+    assert result["ui"]["h3_editor_source"] == [source]
+
+
+def test_authoring_editor_changed_cast_only_source_preserves_user_initial_and_style():
+    current = json.loads(_authoring_json("user motion"))
+    current["initial_ja"] = "user initial"
+    current["style_ja"] = "user style"
+    current["throughout"] = "keep throughout"
+    current_text = json.dumps(current, ensure_ascii=False)
+
+    analyzed = json.loads(_authoring_json("analysis default motion"))
+    analyzed["initial_ja"] = ""
+    analyzed["style_ja"] = ""
+    analyzed["subjects"][0]["appearance_ja"] = "new appearance"
+    source = json.dumps(analyzed, ensure_ascii=False)
+
+    result = H3AuthoringEditor().edit(current_text, "previous source", source)
+    merged = json.loads(result["result"][0])
+    assert merged["initial_ja"] == "user initial"
+    assert merged["style_ja"] == "user style"
     assert merged["subjects"][0]["appearance_ja"] == "new appearance"
     assert merged["throughout"] == "keep throughout"
     assert merged["shots"] == current["shots"]
