@@ -25,7 +25,7 @@ class InitialSubjectDraft(BaseModel):
     """Appearance prose for one person/character discovered in an Initial image."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    appearance_ja: str = Field(min_length=1, max_length=2_000)
+    appearance_ja: str = Field(min_length=1)
 
 
 class InitialPicturePayload(BaseModel):
@@ -35,8 +35,8 @@ class InitialPicturePayload(BaseModel):
     subjects: list[InitialSubjectDraft] = Field(
         default_factory=list, max_length=MAX_SUBJECTS_PER_PICTURE
     )
-    initial_ja: str = Field(default="", max_length=5_000)
-    style_ja: str = Field(default="", max_length=1_500)
+    initial_ja: str = ""
+    style_ja: str = ""
 
     @model_validator(mode="after")
     def validate_local_subject_references(self) -> "InitialPicturePayload":
@@ -55,7 +55,7 @@ class CastPicturePayload(BaseModel):
     """One-pass Qwen output for a Cast image, whose contract is exactly one person."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    appearance_ja: str = Field(min_length=1, max_length=2_000)
+    appearance_ja: str = Field(min_length=1)
 
 
 class CanonicalSubject(BaseModel):
@@ -65,7 +65,7 @@ class CanonicalSubject(BaseModel):
     label: str = Field(pattern=r"^<Subject [1-9][0-9]*>$")
     picture_number: int = Field(ge=1, le=MAX_REFERENCE_IMAGES)
     source_role: PictureRole
-    appearance_ja: str = Field(min_length=1, max_length=2_000)
+    appearance_ja: str = Field(min_length=1)
 
 
 class ReferenceAnalysis(BaseModel):
@@ -77,8 +77,8 @@ class ReferenceAnalysis(BaseModel):
     initial_picture_number: int | None = Field(default=None, ge=1, le=MAX_REFERENCE_IMAGES)
     picture_roles: list[PictureRole] = Field(min_length=1, max_length=MAX_REFERENCE_IMAGES)
     subjects: list[CanonicalSubject] = Field(default_factory=list)
-    initial_ja: str = Field(default="", max_length=5_000)
-    style_ja: str = Field(default="", max_length=1_500)
+    initial_ja: str = ""
+    style_ja: str = ""
 
     @model_validator(mode="after")
     def validate_reference_layout(self) -> "ReferenceAnalysis":
@@ -104,8 +104,8 @@ class UserShot(BaseModel):
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     start_time_seconds: float | None = Field(default=None, ge=0, le=MAX_SHOT_START_SECONDS)
-    motion: str = Field(default="", max_length=6_000)
-    camera: str = Field(default=DEFAULT_CAMERA, max_length=2_000)
+    motion: str = ""
+    camera: str = DEFAULT_CAMERA
 
 
 class AuthoringSubject(BaseModel):
@@ -115,7 +115,7 @@ class AuthoringSubject(BaseModel):
     label: str = Field(pattern=r"^<Subject [1-9][0-9]*>$")
     picture_number: int = Field(ge=1, le=MAX_REFERENCE_IMAGES)
     source_role: PictureRole
-    appearance_ja: str = Field(min_length=1, max_length=2_000)
+    appearance_ja: str = Field(min_length=1)
 
 
 class AuthoringInput(BaseModel):
@@ -126,9 +126,9 @@ class AuthoringInput(BaseModel):
     reference_image_count: int = Field(ge=1, le=MAX_REFERENCE_IMAGES)
     initial_picture_number: int | None = Field(default=None, ge=1, le=MAX_REFERENCE_IMAGES)
     subjects: list[AuthoringSubject] = Field(default_factory=list)
-    initial_ja: str = Field(default="", max_length=5_000)
-    style_ja: str = Field(default="", max_length=1_500)
-    throughout: str = Field(default="", max_length=4_000)
+    initial_ja: str = ""
+    style_ja: str = ""
+    throughout: str = ""
     shots: list[UserShot] = Field(
         default_factory=lambda: [UserShot()], min_length=1, max_length=MAX_SHOTS
     )
@@ -211,7 +211,7 @@ class ComposerSubjectInput(BaseModel):
     label: str = Field(pattern=r"^<Subject [1-9][0-9]*>$")
     picture_number: int = Field(ge=1, le=MAX_REFERENCE_IMAGES)
     source_role: PictureRole
-    appearance_ja: str = Field(min_length=1, max_length=2_000)
+    appearance_ja: str = Field(min_length=1)
 
 
 class ComposerShotInput(BaseModel):
@@ -237,12 +237,12 @@ class ComposerInput(BaseModel):
 class ComposerSubjectAppearance(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     label: str = Field(pattern=r"^<Subject [1-9][0-9]*>$")
-    appearance_en: str = Field(min_length=1, max_length=2_500)
+    appearance_en: str = Field(min_length=1)
 
 
 class ComposerShotOutput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    description: str = Field(min_length=1, max_length=8_000)
+    description: str = Field(min_length=1)
 
 
 class ComposerOutput(BaseModel):
@@ -250,6 +250,6 @@ class ComposerOutput(BaseModel):
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     subject_appearances: list[ComposerSubjectAppearance] = Field(default_factory=list)
-    style_description: str = Field(default="", max_length=2_500)
-    summary_overview: str = Field(default="", max_length=3_000)
+    style_description: str = ""
+    summary_overview: str = ""
     shots: list[ComposerShotOutput] = Field(min_length=1, max_length=MAX_SHOTS)

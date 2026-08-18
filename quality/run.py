@@ -1842,7 +1842,26 @@ def _dry_run(workflow_path: Path = DEFAULT_WORKFLOW) -> int:
         assert config["temperature"] == 0.0
         assert config["enable_thinking"] is False
         assert config["force_mmproj"] is True
-        assert config["extra_completion_response_format"] == {"type": "json_object"}
+        response_format = config["extra_completion_response_format"]
+        assert response_format["type"] == "json_object"
+        schema = response_format["schema"]
+        assert schema["additionalProperties"] is False
+        assert schema["required"] == list(schema["properties"])
+        assert "maxLength" not in json.dumps(schema)
+        assert "maxLength" not in json.dumps(ComposerOutput.model_json_schema())
+        assert schema["properties"]["shots"]["minItems"] == len(inputs.shots)
+        assert schema["properties"]["shots"]["maxItems"] == len(inputs.shots)
+        expected_appearances = len(inputs.subjects) if inputs.mode == "ref2va" else 0
+        assert schema["properties"]["subject_appearances"]["minItems"] == expected_appearances
+        assert schema["properties"]["subject_appearances"]["maxItems"] == expected_appearances
+        if inputs.style_ja:
+            assert schema["properties"]["style_description"]["minLength"] == 1
+        else:
+            assert schema["properties"]["style_description"]["const"] == ""
+        if inputs.mode == "ref2va":
+            assert schema["properties"]["summary_overview"]["minLength"] == 1
+        else:
+            assert schema["properties"]["summary_overview"]["const"] == ""
         assert seed == 0
         print(f"PASS  {case.name}: {len(inputs.shots)} shot(s)")
     print(f"All {len(CASES)} dry-run cases passed current H3 Scribe contracts.")
@@ -1887,14 +1906,23 @@ def _dry_run_analyze(workflow_path: Path = DEFAULT_ANALYZE_WORKFLOW) -> int:
         "n_ctx": 8192,
         "chat_handler": "qwen35",
     }
-    for name, builder in (("Initial", initial_request), ("Cast", cast_request)):
+    for name, builder, output_model in (
+        ("Initial", initial_request, InitialPicturePayload),
+        ("Cast", cast_request, CastPicturePayload),
+    ):
         _system, _user, config_json, seed = builder(base_config)
         config = json.loads(config_json)
         assert config["temperature"] == 0.0
         assert config["enable_thinking"] is False
         assert config["force_mmproj"] is False
         assert config["max_images"] == 1
-        assert config["extra_completion_response_format"] == {"type": "json_object"}
+        response_format = config["extra_completion_response_format"]
+        assert response_format["type"] == "json_object"
+        schema = response_format["schema"]
+        assert schema["additionalProperties"] is False
+        assert schema["required"] == list(schema["properties"])
+        assert "maxLength" not in json.dumps(schema)
+        assert "maxLength" not in json.dumps(output_model.model_json_schema())
         assert seed == 0
         print(f"PASS  {name} request contract")
     for case in ANALYZE_CASES:

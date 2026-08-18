@@ -11,7 +11,8 @@ def test_initial_request_reproduces_old_json_mode_and_sampling():
     config = json.loads(config_text)
     assert "SHARED APPEARANCE CONTRACT" in system
     assert "Return exactly one JSON object matching this schema" in user
-    assert config["extra_completion_response_format"] == {"type": "json_object"}
+    response_format = config["extra_completion_response_format"]
+    assert response_format["type"] == "json_object"
     assert config["temperature"] == 0.0
     assert config["top_p"] == 1.0
     assert config["top_k"] == 0

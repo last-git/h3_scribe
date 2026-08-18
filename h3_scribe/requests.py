@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from .models import (
     AuthoringInput,
     CastPicturePayload,
+    ComposerInput,
     ComposerOutput,
     InitialPicturePayload,
 )
@@ -26,12 +27,12 @@ def _read_prompt(name: str) -> str:
     return text
 
 
-def _schema_instruction(model: type[BaseModel]) -> str:
-    schema = json.dumps(model.model_json_schema(), ensure_ascii=False, separators=(",", ":"))
+def _schema_instruction(schema: dict[str, Any]) -> str:
+    serialized = json.dumps(schema, ensure_ascii=False, separators=(",", ":"))
     return (
         "Return exactly one JSON object matching this schema. "
         "Do not use Markdown/code fences or surrounding prose: "
-        + schema
+        + serialized
     )
 
 
@@ -51,7 +52,43 @@ def _parse_config(value: Any) -> dict[str, Any]:
     raise TypeError(f"unsupported base_config type: {type(value).__name__}")
 
 
-def _stage_config(base_config: Any, *, max_tokens: int, text_only: bool) -> str:
+def _response_schema(model: type[BaseModel]) -> dict[str, Any]:
+    schema = model.model_json_schema()
+    schema["required"] = list(schema["properties"])
+    return schema
+
+
+def _composer_response_schema(inputs: ComposerInput) -> dict[str, Any]:
+    schema = _response_schema(ComposerOutput)
+    properties = schema["properties"]
+
+    shot_count = len(inputs.shots)
+    properties["shots"]["minItems"] = shot_count
+    properties["shots"]["maxItems"] = shot_count
+
+    appearance_count = len(inputs.subjects) if inputs.mode == "ref2va" else 0
+    properties["subject_appearances"]["minItems"] = appearance_count
+    properties["subject_appearances"]["maxItems"] = appearance_count
+
+    if inputs.mode == "ref2va":
+        properties["summary_overview"]["minLength"] = 1
+        labels = [subject.label for subject in inputs.subjects]
+        if labels:
+            schema["$defs"]["ComposerSubjectAppearance"]["properties"]["label"]["enum"] = labels
+    else:
+        properties["summary_overview"]["const"] = ""
+
+    if inputs.style_ja:
+        properties["style_description"]["minLength"] = 1
+    else:
+        properties["style_description"]["const"] = ""
+
+    return schema
+
+
+def _stage_config(
+    base_config: Any, *, max_tokens: int, text_only: bool, response_schema: dict[str, Any]
+) -> str:
     config = _parse_config(base_config)
     # H3 owns these deterministic extraction/composition settings; Simple Qwen owns execution.
     config.update(
@@ -67,7 +104,10 @@ def _stage_config(base_config: Any, *, max_tokens: int, text_only: bool) -> str:
             "frequency_penalty": 0.0,
             "enable_thinking": False,
             "force_mmproj": text_only,
-            "extra_completion_response_format": {"type": "json_object"},
+            "extra_completion_response_format": {
+                "type": "json_object",
+                "schema": response_schema,
+            },
         }
     )
     # Simple Qwen's Qwen35ChatHandler owns the Qwen3.6 thinking switch. With no
@@ -82,19 +122,31 @@ def _stage_config(base_config: Any, *, max_tokens: int, text_only: bool) -> str:
 
 
 def initial_request(base_config: Any = None) -> tuple[str, str, str, int]:
+    schema = _response_schema(InitialPicturePayload)
     return (
         _read_prompt("builder_extract_initial.md"),
-        _schema_instruction(InitialPicturePayload),
-        _stage_config(base_config, max_tokens=2048, text_only=False),
+        _schema_instruction(schema),
+        _stage_config(
+            base_config,
+            max_tokens=2048,
+            text_only=False,
+            response_schema=schema,
+        ),
         0,
     )
 
 
 def cast_request(base_config: Any = None) -> tuple[str, str, str, int]:
+    schema = _response_schema(CastPicturePayload)
     return (
         _read_prompt("builder_extract_cast.md"),
-        _schema_instruction(CastPicturePayload),
-        _stage_config(base_config, max_tokens=2048, text_only=False),
+        _schema_instruction(schema),
+        _stage_config(
+            base_config,
+            max_tokens=2048,
+            text_only=False,
+            response_schema=schema,
+        ),
         0,
     )
 
@@ -110,10 +162,16 @@ def compose_request(
         mode="json", exclude={"shots": {"__all__": {"start_time_seconds"}}}
     )
     semantic_json = dump_json(semantic_payload, pretty=False)
-    user_prompt = semantic_json + "\n\n" + _schema_instruction(ComposerOutput)
+    schema = _composer_response_schema(inputs)
+    user_prompt = semantic_json + "\n\n" + _schema_instruction(schema)
     return (
         _read_prompt(prompt_name),
         user_prompt,
-        _stage_config(base_config, max_tokens=3072, text_only=True),
+        _stage_config(
+            base_config,
+            max_tokens=3072,
+            text_only=True,
+            response_schema=schema,
+        ),
         0,
     )
